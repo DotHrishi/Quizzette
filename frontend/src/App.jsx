@@ -7,6 +7,7 @@ import ViewQuizzes from './pages/ViewQuizzes';
 import MakeQuizzes from './pages/MakeQuizzes';
 import TakeQuiz from './pages/TakeQuiz';
 import Leaderboard from './pages/Leaderboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -16,10 +17,18 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/giveQuizzes" element={<ViewQuizzes />} /> 
-          <Route path="/makeQuizzes" element={<MakeQuizzes />} />
-          <Route path="/takeQuiz/:code" element={<TakeQuiz />} />
           <Route path="/leaderboard/:code" element={<Leaderboard />} />
+
+          {/* Protected — must be logged in */}
+          <Route path="/giveQuizzes" element={
+            <ProtectedRoute><ViewQuizzes /></ProtectedRoute>
+          } />
+          <Route path="/makeQuizzes" element={
+            <ProtectedRoute><MakeQuizzes /></ProtectedRoute>
+          } />
+          <Route path="/takeQuiz/:code" element={
+            <ProtectedRoute><TakeQuiz /></ProtectedRoute>
+          } />
         </Routes>
       </Box>
     </>

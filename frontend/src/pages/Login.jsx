@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
@@ -7,6 +7,9 @@ import Footer from "../components/Footer";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // If redirected from a protected route, go back there after login
+  const from = location.state?.from?.pathname || "/";
 
   const [formData, setFormData] = useState({
     email: "",
@@ -41,7 +44,7 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       window.dispatchEvent(new Event("authChange"));
       setMessage(res.data.message);
-      navigate("/");
+      navigate(from, { replace: true });
     } catch (error) {
       setMessage("Email or Password is incorrect!");
     }
