@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ViewQuizzes from './pages/ViewQuizzes';
 import MakeQuizzes from './pages/MakeQuizzes';
 import TakeQuiz from './pages/TakeQuiz';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/giveQuizzes" element={<ViewQuizzes />} /> 
           <Route path="/makeQuizzes" element={<MakeQuizzes />} />
           <Route path="/takeQuiz/:code" element={<TakeQuiz />} />
+          <Route path="/leaderboard/:code" element={<Leaderboard />} />
         </Routes>
       </Box>
     </>

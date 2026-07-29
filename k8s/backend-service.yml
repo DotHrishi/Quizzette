@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quizzete-backend
+  labels:
+    app: quizzete-backend
+spec:
+  selector:
+    app: quizzete-backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP

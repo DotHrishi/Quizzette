@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s      # How often to scrape targets
+  evaluation_interval: 15s  # How often to evaluate rules
+
+scrape_configs:
+  # Prometheus scrapes itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Quizzete backend — exposes /metrics via prom-client
+  - job_name: "quizzete-backend"
+    static_configs:
+      - targets: ["backend:5000"]
+    metrics_path: /metrics
+    scheme: http

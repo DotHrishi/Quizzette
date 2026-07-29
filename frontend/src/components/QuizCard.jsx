@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AccessTime, Quiz, Person, Close, ArrowForward, Bolt } from "@mui/icons-material";
+import { AccessTime, Quiz, Close, ArrowForward, Bolt, EmojiEvents } from "@mui/icons-material";
 
 const QuizCard = ({ quiz }) => {
   const [open, setOpen] = useState(false);
@@ -75,13 +75,20 @@ const QuizCard = ({ quiz }) => {
                     </div>
                 </div>
 
-                <div className="mt-auto">
+                <div className="mt-auto flex flex-col gap-2">
                     <button
                         onClick={() => setOpen(true)}
                         className="w-full rounded-xl bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 p-4 font-bold text-md transition-all hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
                     >
                         Start Assessment
                         <ArrowForward className="w-5 h-5 transition-transform group-hover/btn:translate-x-1" />
+                    </button>
+                    <button
+                        onClick={() => navigate(`/leaderboard/${quiz.quiz_code}`)}
+                        className="w-full rounded-xl bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700/30 p-3 font-semibold text-sm transition-all hover:bg-yellow-400 hover:text-yellow-900 dark:hover:bg-yellow-500 dark:hover:text-black active:scale-[0.98] flex items-center justify-center gap-2"
+                    >
+                        <EmojiEvents fontSize="small" />
+                        Leaderboard
                     </button>
                 </div>
             </div>

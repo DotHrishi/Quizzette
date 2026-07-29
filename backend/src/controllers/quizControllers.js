@@ -147,9 +147,12 @@ export const getQuizQuestions = async (req, res) => {
 export const submitQuiz = async (req, res) => {
   try {
     const { code } = req.params;
-    const { answers } = req.body; // { questionId: "A", questionId2: "B" }
+    const { answers, playerName, timeTaken } = req.body;
+    // answers: { questionId: "A", ... }
+    // playerName: string (optional)
+    // timeTaken: number in seconds (optional)
 
-    const quiz = await sql`SELECT id, num_questions FROM quizzes WHERE quiz_code = ${code}`;
+    const quiz = await sql`SELECT id, num_questions, duration FROM quizzes WHERE quiz_code = ${code}`;
     
     if (quiz.length === 0) {
       return res.status(404).json({ message: "Quiz not found" });
@@ -182,10 +185,61 @@ export const submitQuiz = async (req, res) => {
       };
     });
 
+    // Save to leaderboard if a player name was provided
+    if (playerName && playerName.trim()) {
+      const durationSeconds = quiz[0].duration * 60;
+      const actualTimeTaken = (typeof timeTaken === "number" && timeTaken > 0)
+        ? timeTaken
+        : durationSeconds;
+
+      await sql`
+        INSERT INTO leaderboard (quiz_id, player_name, score, time_taken_seconds)
+        VALUES (${quizId}, ${playerName.trim()}, ${score}, ${actualTimeTaken})
+      `;
+    }
+
     res.status(200).json({
       score,
       total: quiz[0].num_questions,
       results
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// GET /api/quiz/:code/leaderboard
+export const getLeaderboard = async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const quiz = await sql`SELECT id, topic FROM quizzes WHERE quiz_code = ${code}`;
+
+    if (quiz.length === 0) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    const quizId = quiz[0].id;
+
+    const entries = await sql`
+      SELECT
+        id,
+        player_name,
+        score,
+        time_taken_seconds,
+        submitted_at,
+        RANK() OVER (ORDER BY score DESC, time_taken_seconds ASC) AS rank
+      FROM leaderboard
+      WHERE quiz_id = ${quizId}
+      ORDER BY score DESC, time_taken_seconds ASC
+      LIMIT 100
+    `;
+
+    res.status(200).json({
+      quizCode: code,
+      topic: quiz[0].topic,
+      leaderboard: entries
     });
   } catch (error) {
     console.error(error);

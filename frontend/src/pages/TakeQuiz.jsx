@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { AccessTime, CheckCircle, Cancel } from "@mui/icons-material";
+import { AccessTime, CheckCircle, Cancel, EmojiEvents, Person } from "@mui/icons-material";
 
 export default function TakeQuiz() {
   const { code } = useParams();
@@ -16,6 +16,18 @@ export default function TakeQuiz() {
   const [view, setView] = useState('landing');
   const [timeLeft, setTimeLeft] = useState(0); // in seconds
   const [results, setResults] = useState(null);
+  const startTimeRef = useRef(null); // tracks when quiz was started
+  const [timeTaken, setTimeTaken] = useState(0); // elapsed seconds at submission
+  const [playerName, setPlayerName] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      return user?.username || "";
+    } catch {
+      return "";
+    }
+  });
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [nameInput, setNameInput] = useState("");
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,6 +84,7 @@ export default function TakeQuiz() {
       
       setQuestions(data.questions);
       setTimeLeft(quizDetails.duration * 60); // Convert minutes to seconds
+      startTimeRef.current = Date.now(); // record start time
       setView('active');
     } catch (err) {
       setError(err.message);
@@ -90,18 +103,27 @@ export default function TakeQuiz() {
   const handleConfirmSubmit = async () => {
     setIsSubmitting(true);
     setShowConfirmSubmit(false);
+
+    // Calculate time taken
+    const elapsed = startTimeRef.current
+      ? Math.round((Date.now() - startTimeRef.current) / 1000)
+      : quizDetails?.duration * 60 || 0;
+    setTimeTaken(elapsed);
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/quiz/${code}/submit`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ answers })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers,
+          playerName: playerName.trim(),
+          timeTaken: elapsed,
+        })
       });
       const data = await res.json();
-      
+
       if (!res.ok) throw new Error(data.message || "Failed to submit quiz");
-      
+
       setResults(data);
       setView('results');
     } catch (err) {
@@ -111,7 +133,20 @@ export default function TakeQuiz() {
     }
   };
 
+  // Called when user wants to submit — if no name yet, show the name prompt first
   const handleAttemptSubmit = () => {
+    if (!playerName.trim()) {
+      setNameInput("");
+      setShowNamePrompt(true);
+    } else {
+      setShowConfirmSubmit(true);
+    }
+  };
+
+  const handleNamePromptConfirm = () => {
+    if (!nameInput.trim()) return; // name is required
+    setPlayerName(nameInput.trim());
+    setShowNamePrompt(false);
     setShowConfirmSubmit(true);
   };
 
@@ -362,6 +397,33 @@ export default function TakeQuiz() {
               <div className="text-sm font-semibold text-gray-500">
                 {Math.round((results.score / results.total) * 100)}% Accuracy
               </div>
+
+              {/* Time taken + player name */}
+              <div className="flex justify-center gap-6 mt-6 flex-wrap">
+                {timeTaken > 0 && (
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-4 py-2 rounded-sm text-gray-600 text-sm font-semibold">
+                    <AccessTime fontSize="small" className="text-blue-500" />
+                    Time: {Math.floor(timeTaken / 60)}m {timeTaken % 60}s
+                  </div>
+                )}
+                {playerName && (
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-4 py-2 rounded-sm text-gray-600 text-sm font-semibold">
+                    <Person fontSize="small" className="text-green-500" />
+                    {playerName}
+                  </div>
+                )}
+              </div>
+
+              {/* Leaderboard CTA */}
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate(`/leaderboard/${code}`)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold rounded-sm transition-all hover:scale-105"
+                >
+                  <EmojiEvents fontSize="small" />
+                  View Leaderboard
+                </button>
+              </div>
             </div>
 
             {/* Detailed Answers Section */}
@@ -419,13 +481,64 @@ export default function TakeQuiz() {
               ))}
             </div>
 
-            <div className="mt-10 mb-20 text-center">
+            <div className="mt-10 mb-20 text-center flex justify-center gap-4 flex-wrap">
+              <button
+                onClick={() => navigate(`/leaderboard/${code}`)}
+                className="inline-flex items-center gap-2 px-8 py-4 text-yellow-900 text-lg font-semibold rounded-sm bg-yellow-400 hover:bg-yellow-500 transform transition-transform duration-300 ease-in-out hover:scale-105"
+              >
+                <EmojiEvents />
+                View Leaderboard
+              </button>
               <button
                 onClick={() => navigate("/")}
                 className="px-8 py-4 text-green-300 text-lg font-semibold rounded-sm bg-[#000dff] transform transition-transform duration-300 ease-in-out hover:scale-110"
               >
                 Return to Dashboard
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* NAME PROMPT MODAL — name is required to submit */}
+        {showNamePrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200" />
+            <div className="relative w-full max-w-md bg-white border border-blue-600 border-r-8 border-b-8 p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Person /> Enter Your Name
+              </h2>
+              <p className="text-gray-500 mb-6 text-sm">
+                Your name is required to appear on the leaderboard before submitting.
+              </p>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleNamePromptConfirm()}
+                maxLength={40}
+                placeholder="e.g. Alex"
+                className={`w-full border-2 outline-none rounded-sm px-4 py-3 text-lg font-medium mb-1 transition-colors ${
+                  nameInput.trim() === "" && nameInput !== ""
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-gray-300 focus:border-blue-600"
+                }`}
+                autoFocus
+              />
+              {nameInput !== "" && nameInput.trim() === "" && (
+                <p className="text-red-500 text-xs mb-4">Name cannot be blank spaces.</p>
+              )}
+              {nameInput.trim() === "" && nameInput === "" && (
+                <p className="text-gray-400 text-xs mb-4">A name is required to submit.</p>
+              )}
+              <div className="mt-4">
+                <button
+                  onClick={handleNamePromptConfirm}
+                  disabled={!nameInput.trim()}
+                  className="w-full px-4 py-3 font-semibold text-green-300 bg-[#000dff] hover:bg-blue-800 rounded-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Continue to Submit
+                </button>
+              </div>
             </div>
           </div>
         )}
