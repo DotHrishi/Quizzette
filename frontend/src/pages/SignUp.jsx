@@ -35,20 +35,18 @@ const SignUp = () => {
         }),
         {
           loading: "Registering user...",
-          success: "Registration successful!, Please login now.",
-          error: "User already exists!",
+          success: "Registration successful! Please login now.",
+          error: (err) => err?.response?.data?.message || "Registration failed. Please try again.",
         },
         {
-          success: {
-            duration: 3000,
-          },
+          success: { duration: 3000 },
         }
       );
 
       setMessage(res.data.message);
       navigate("/login");
     } catch (error) {
-      setMessage("Error registering user");
+      setMessage(error?.response?.data?.message || "Error registering user");
     }
   };
 
