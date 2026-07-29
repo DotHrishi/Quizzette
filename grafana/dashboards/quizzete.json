@@ -1,0 +1,150 @@
+{
+  "title": "Quizzete Backend",
+  "uid": "quizzete-backend",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[5m])) by (route, method)",
+          "legendFormat": "{{method}} {{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "HTTP Error Rate (4xx + 5xx req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status_code=~\"4..|5..\"}[5m])) by (route, status_code)",
+          "legendFormat": "{{status_code}} {{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "color": { "fixedColor": "red", "mode": "fixed" } }
+      }
+    },
+    {
+      "id": 3,
+      "title": "P95 Response Time (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
+          "legendFormat": "p95 {{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 4,
+      "title": "P50 Response Time (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
+          "legendFormat": "p50 {{route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Total Requests (counter)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(http_requests_total)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": 0 }] }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Process Memory (MB)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 16, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "decmbytes", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "yellow", "value": 200 },
+            { "color": "red", "value": 400 }
+          ]}
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Node.js Event Loop Lag (ms)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 16, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds * 1000",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "yellow", "value": 50 },
+            { "color": "red", "value": 200 }
+          ]}
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Active Node.js Handles",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 16, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "nodejs_active_handles_total",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": 0 }] }
+        }
+      }
+    }
+  ]
+}

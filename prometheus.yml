@@ -1,6 +1,6 @@
 global:
-  scrape_interval: 15s      # How often to scrape targets
-  evaluation_interval: 15s  # How often to evaluate rules
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
   # Prometheus scrapes itself
@@ -8,9 +8,16 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # Quizzete backend — exposes /metrics via prom-client
-  - job_name: "quizzete-backend"
+  # Local Docker backend
+  - job_name: "quizzete-backend-local"
     static_configs:
       - targets: ["backend:5000"]
     metrics_path: /metrics
     scheme: http
+
+  # Vercel production backend — uncomment and replace URL after redeployment
+  # - job_name: "quizzete-backend-vercel"
+  #   static_configs:
+  #     - targets: ["your-project.vercel.app"]
+  #   metrics_path: /metrics
+  #   scheme: https
