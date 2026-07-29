@@ -165,11 +165,11 @@ const Login = () => {
               <p className="text-green-400 mt-4 text-center">{message}</p>
             )}
 
-            <p class="text-[#b300ff] text-sm mt-6 text-center">
+            <p className="text-[#b300ff] text-sm mt-6 text-center">
               Don't have an account yet?{" "}
               <a
-                href="/SignUp"
-                class="text-blue-600 font-medium hover:underline ml-1"
+                href="/signup"
+                className="text-blue-600 font-medium hover:underline ml-1"
               >
                 Register here
               </a>
